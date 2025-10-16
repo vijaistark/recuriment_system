@@ -1,29 +1,19 @@
-const Recruiter = require('../models/Recruiter');
-const Assignment = require('../models/Assignment');
-const Candidate = require('../models/Candidate');
+import Assignment from "../models/Assignment.js";
 
-exports.getAssignedCandidates = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const recruiter = await Recruiter.findOne({ user: userId });
-    if (!recruiter) return res.status(404).json({ message: 'Recruiter profile not found' });
-    const assignments = await Assignment.find({ recruiter: recruiter._id }).populate({ path: 'candidate', populate: { path: 'user' } });
-    res.json(assignments);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+export const getAssignedCandidates = async (req, res) => {
+  const assignments = await Assignment.find({ recruiterId: req.user._id }).populate("candidateId");
+  res.json(assignments);
 };
 
-exports.submitGmeet = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const recruiter = await Recruiter.findOne({ user: userId });
-    if (!recruiter) return res.status(404).json({ message: 'Recruiter profile not found' });
-    const { candidateId, gmeetLink } = req.body;
-    const candidate = await Candidate.findById(candidateId);
-    if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
-    const assignment = await Assignment.findOne({ candidate: candidate._id, recruiter: recruiter._id });
-    if (!assignment) return res.status(403).json({ message: 'This candidate is not assigned to you' });
-    assignment.gmeetLink = gmeetLink;
-    await assignment.save();
-    res.json({ message: 'GMeet link submitted', assignment });
-  } catch (err) { res.status(500).json({ message: err.message }); }
+export const addGmeetLink = async (req, res) => {
+  const { assignmentId, gmeetLink } = req.body;
+  const assignment = await Assignment.findById(assignmentId);
+
+  if (!assignment) return res.status(404).json({ message: "Assignment not found" });
+  if (assignment.recruiterId.toString() !== req.user._id.toString())
+    return res.status(403).json({ message: "Unauthorized" });
+
+  assignment.gmeetLink = gmeetLink;
+  await assignment.save();
+  res.json({ message: "GMeet link added successfully" });
 };

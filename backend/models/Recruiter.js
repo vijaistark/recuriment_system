@@ -1,9 +1,8 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const recruiterSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  company: String,
-  phone: String
-}, { timestamps: true });
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  department: String,
+});
 
-module.exports = mongoose.model('Recruiter', recruiterSchema);
+export default mongoose.model("Recruiter", recruiterSchema);

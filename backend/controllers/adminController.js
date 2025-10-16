@@ -1,27 +1,21 @@
-const User = require('../models/User');
-const Recruiter = require('../models/Recruiter');
-const Candidate = require('../models/Candidate');
-const Assignment = require('../models/Assignment');
-const bcrypt = require('bcryptjs');
+import User from "../models/User.js";
+import Assignment from "../models/Assignment.js";
 
-exports.getAllData = async (req, res) => {
+export const addRecruiter = async (req, res) => {
+  const { name, email, password } = req.body;
   try {
-    const users = await User.find().lean();
-    const recruiters = await Recruiter.find().populate('user').lean();
-    const candidates = await Candidate.find().populate('user').lean();
-    const assignments = await Assignment.find().populate({ path: 'candidate', populate: { path: 'user' } }).populate({ path: 'recruiter', populate: { path: 'user' } }).lean();
-    res.json({ users, recruiters, candidates, assignments });
-  } catch (err) { res.status(500).json({ message: err.message }); }
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ message: "Recruiter already exists" });
+
+    const recruiter = await User.create({ name, email, password, role: "recruiter" });
+    res.json(recruiter);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
-exports.createRecruiter = async (req, res) => {
-  try {
-    const { name, email, password, company, phone } = req.body;
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'Email exists' });
-    const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, passwordHash: hash, role: 'recruiter' });
-    const recruiter = await Recruiter.create({ user: user._id, company, phone });
-    res.json({ message: 'Recruiter added', recruiter });
-  } catch (err) { res.status(500).json({ message: err.message }); }
+export const getAllData = async (req, res) => {
+  const users = await User.find();
+  const assignments = await Assignment.find().populate("candidateId recruiterId");
+  res.json({ users, assignments });
 };

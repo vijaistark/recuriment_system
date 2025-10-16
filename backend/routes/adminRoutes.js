@@ -1,11 +1,10 @@
-const express = require('express');
+import express from "express";
+import { addRecruiter, getAllData } from "../controllers/adminController.js";
+import { protect, adminOnly } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
-const admin = require('../controllers/adminController');
-const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 
-router.use(verifyToken, authorizeRoles('admin'));
+router.post("/addRecruiter", protect, adminOnly, addRecruiter);
+router.get("/allData", protect, adminOnly, getAllData);
 
-router.get('/all', admin.getAllData);
-router.post('/recruiter', admin.createRecruiter);
-
-module.exports = router;
+export default router;
